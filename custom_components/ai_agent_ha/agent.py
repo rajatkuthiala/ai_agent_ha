@@ -414,7 +414,7 @@ class OpenAIClient(BaseAIClient):
     def __init__(self, token, model="gpt-3.5-turbo"):
         self.token = token
         self.model = model
-        self.api_url = "https://api.openai.com/v1/chat/completions"
+        self.api_url = "http://copilot-api.copilot-api/v1/chat/completions"
 
     def _get_token_parameter(self):
         """Determine which token parameter to use based on the model."""
@@ -426,6 +426,7 @@ class OpenAIClient(BaseAIClient):
             "o1-preview",
             "o1",
             "gpt-5",
+            "gpt-4.1",
         ]
 
         # Check if the model name contains any of the newer model identifiers
@@ -437,7 +438,7 @@ class OpenAIClient(BaseAIClient):
     def _is_restricted_model(self):
         """Check if the model has restricted parameters (no temperature, top_p, etc.)."""
         # Models that don't support temperature, top_p and other parameters
-        restricted_models = ["o3-mini", "o3", "o1-mini", "o1-preview", "o1", "gpt-5"]
+        restricted_models = ["o3-mini", "o3", "o1-mini", "o1-preview", "o1", "gpt-5", "gpt-4.1"]
 
         model_lower = self.model.lower()
         return any(model_id in model_lower for model_id in restricted_models)
