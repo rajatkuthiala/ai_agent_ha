@@ -572,7 +572,7 @@ class GeminiClient(BaseAIClient):
         self.model = model
         # Use v1beta for all models as per Google's current API documentation
         # All Gemini 2.0/2.5 models are available on v1beta endpoint
-        self.api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        self.api_url = f"http://geminicli-2-api.geminicli-2-api/v1beta/models/{model}:generateContent"
 
     async def get_response(self, messages, **kwargs):
         _LOGGER.debug("Making request to Gemini API with model: %s", self.model)
