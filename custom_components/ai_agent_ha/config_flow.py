@@ -223,6 +223,12 @@ class AiAgentHaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ig
                     endpoint_type = user_input.get("zai_endpoint", "general")
                     self.config_data["zai_endpoint"] = endpoint_type
 
+                # For openai, store optional endpoint
+                if provider == "openai":
+                    openai_endpoint = user_input.get("openai_endpoint")
+                    if openai_endpoint is not None:
+                        self.config_data["openai_endpoint"] = openai_endpoint
+
                 # For local, store optional token
                 if provider == "local":
                     local_token_val = user_input.get(CONF_LOCAL_TOKEN)
@@ -335,6 +341,11 @@ class AiAgentHaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ig
             ),
         }
 
+        if provider == "openai":
+            schema_dict[vol.Optional("openai_endpoint")] = TextSelector(
+                TextSelectorConfig(type="text")
+            )
+
         # Add model selection if available
         if available_models:
             # Add predefined models + custom option (avoid duplicating "Custom...")
@@ -440,6 +451,14 @@ class AiAgentHaOptionsFlowHandler(config_entries.OptionsFlow):
                     if provider == "zai":
                         endpoint_type = user_input.get("zai_endpoint", "general")
                         updated_data["zai_endpoint"] = endpoint_type
+
+                    # For openai, update optional endpoint
+                    if provider == "openai":
+                        openai_endpoint = user_input.get("openai_endpoint")
+                        if openai_endpoint:
+                            updated_data["openai_endpoint"] = openai_endpoint
+                        elif "openai_endpoint" in updated_data:
+                            updated_data.pop("openai_endpoint")
 
                     # For local, update optional token
                     if provider == "local":
@@ -560,6 +579,12 @@ class AiAgentHaOptionsFlowHandler(config_entries.OptionsFlow):
                 TextSelectorConfig(type="password")
             ),
         }
+
+        if provider == "openai":
+            current_endpoint = self.config_entry.data.get("openai_endpoint", "")
+            schema_dict[vol.Optional("openai_endpoint", default=current_endpoint)] = TextSelector(
+                TextSelectorConfig(type="text")
+            )
 
         # Add model selection if available
         if available_models:

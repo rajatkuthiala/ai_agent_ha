@@ -489,10 +489,10 @@ class LlamaClient(BaseAIClient):
 
 
 class OpenAIClient(BaseAIClient):
-    def __init__(self, token, model="gpt-3.5-turbo"):
+    def __init__(self, token, model="gpt-3.5-turbo", endpoint=None):
         self.token = token
         self.model = model
-        self.api_url = "https://api.openai.com/v1/chat/completions"
+        self.api_url = endpoint if endpoint else "https://api.openai.com/v1/chat/completions"
 
     def _is_restricted_model(self):
         """Check if the model has restricted parameters (no temperature, top_p, etc.)."""
@@ -1173,7 +1173,8 @@ class AiAgentHaAgent:
         # Initialize the appropriate AI client with model selection
         if provider == "openai":
             model = models_config.get("openai", "gpt-3.5-turbo")
-            self.ai_client = OpenAIClient(config.get("openai_token"), model)
+            endpoint = config.get("openai_endpoint")
+            self.ai_client = OpenAIClient(config.get("openai_token"), model, endpoint)
         elif provider == "gemini":
             model = models_config.get("gemini", "gemini-2.5-flash")
             self.ai_client = GeminiClient(config.get("gemini_token"), model)
@@ -2695,6 +2696,14 @@ Then restart Home Assistant to see your new dashboard in the sidebar."""
                     )
                     _LOGGER.debug(
                         f"Initialized {selected_provider} client with model {provider_settings['model']}"
+                    )
+                elif selected_provider == "openai":
+                    endpoint = config.get("openai_endpoint")
+                    self.ai_client = provider_settings["client_class"](
+                        token=token, model=provider_settings["model"], endpoint=endpoint
+                    )
+                    _LOGGER.debug(
+                        f"Initialized {selected_provider} client with model {provider_settings['model']}, endpoint {endpoint}"
                     )
                 else:
                     # Other clients take (token, model)
