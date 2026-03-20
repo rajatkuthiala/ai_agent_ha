@@ -15,7 +15,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
 )
 
-from .const import CONF_LOCAL_MODEL, CONF_LOCAL_URL, DOMAIN
+from .const import CONF_LOCAL_MODEL, CONF_LOCAL_TOKEN, CONF_LOCAL_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -223,6 +223,12 @@ class AiAgentHaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ig
                     endpoint_type = user_input.get("zai_endpoint", "general")
                     self.config_data["zai_endpoint"] = endpoint_type
 
+                # For local, store optional token
+                if provider == "local":
+                    local_token_val = user_input.get(CONF_LOCAL_TOKEN)
+                    if local_token_val is not None:
+                        self.config_data[CONF_LOCAL_TOKEN] = local_token_val
+
                 # Add model configuration if provided
                 selected_model = user_input.get("model")
                 custom_model = user_input.get("custom_model")
@@ -293,10 +299,13 @@ class AiAgentHaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ig
             )
 
         if provider == "local":
-            # For local provider, we need both URL and optional model name
+            # For local provider, we need both URL, optional token and optional model name
             schema_dict = {
                 vol.Required(CONF_LOCAL_URL): TextSelector(
                     TextSelectorConfig(type="text")
+                ),
+                vol.Optional(CONF_LOCAL_TOKEN): TextSelector(
+                    TextSelectorConfig(type="password")
                 ),
             }
 
@@ -432,6 +441,15 @@ class AiAgentHaOptionsFlowHandler(config_entries.OptionsFlow):
                         endpoint_type = user_input.get("zai_endpoint", "general")
                         updated_data["zai_endpoint"] = endpoint_type
 
+                    # For local, update optional token
+                    if provider == "local":
+                        local_token_val = user_input.get(CONF_LOCAL_TOKEN)
+                        if local_token_val:
+                            updated_data[CONF_LOCAL_TOKEN] = local_token_val
+                        elif CONF_LOCAL_TOKEN in updated_data:
+                            # Remove it if cleared
+                            updated_data.pop(CONF_LOCAL_TOKEN)
+
                     # Initialize models dict if it doesn't exist
                     if "models" not in updated_data:
                         updated_data["models"] = {}
@@ -504,10 +522,14 @@ class AiAgentHaOptionsFlowHandler(config_entries.OptionsFlow):
         if provider == "local":
             # For local provider, we need both URL and optional model name
             current_url = self.config_entry.data.get(CONF_LOCAL_URL, "")
+            current_token = self.config_entry.data.get(CONF_LOCAL_TOKEN, "")
 
             schema_dict = {
                 vol.Required(CONF_LOCAL_URL, default=current_url): TextSelector(
                     TextSelectorConfig(type="text")
+                ),
+                vol.Optional(CONF_LOCAL_TOKEN, default=current_token): TextSelector(
+                    TextSelectorConfig(type="password")
                 ),
             }
 

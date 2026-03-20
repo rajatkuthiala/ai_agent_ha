@@ -114,9 +114,10 @@ class BaseAIClient:
 
 
 class LocalClient(BaseAIClient):
-    def __init__(self, url, model=""):
+    def __init__(self, url, model="", token=None):
         self.url = url
         self.model = model
+        self.token = token
 
     async def get_response(self, messages, **kwargs):
         _LOGGER.debug(
@@ -130,6 +131,8 @@ class LocalClient(BaseAIClient):
                 "No model specified for local API request. Some APIs (like Ollama) require a model name."
             )
         headers = {"Content-Type": "application/json"}
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
 
         # Format user prompt from messages
         prompt = ""
@@ -1190,10 +1193,11 @@ class AiAgentHaAgent:
         elif provider == "local":
             model = models_config.get("local", "")
             url = config.get("local_url")
+            token = config.get("local_token")
             if not url:
                 _LOGGER.error("Missing local_url for local provider")
                 raise Exception("Missing local_url configuration for local provider")
-            self.ai_client = LocalClient(url, model)
+            self.ai_client = LocalClient(url, model, token)
         else:  # default to llama if somehow specified
             model = models_config.get("llama", "Llama-4-Maverick-17B-128E-Instruct-FP8")
             self.ai_client = LlamaClient(config.get("llama_token"), model)
@@ -2684,9 +2688,10 @@ Then restart Home Assistant to see your new dashboard in the sidebar."""
                         f"Initialized {selected_provider} client with model {provider_settings['model']}, endpoint_type {endpoint_type}"
                     )
                 elif selected_provider == "local":
-                    # LocalClient takes (url, model)
+                    # LocalClient takes (url, model, token)
+                    local_token = self.config.get("local_token")
                     self.ai_client = provider_settings["client_class"](
-                        url=token, model=provider_settings["model"]
+                        url=token, model=provider_settings["model"], token=local_token
                     )
                     _LOGGER.debug(
                         f"Initialized {selected_provider} client with model {provider_settings['model']}"
