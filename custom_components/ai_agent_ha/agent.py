@@ -505,14 +505,16 @@ class OpenAIClient(BaseAIClient):
     async def get_response(self, messages, **kwargs):
         _LOGGER.debug("Making request to OpenAI API with model: %s", self.model)
 
-        # Validate token
-        if not self.token or not self.token.startswith("sk-"):
+        # Validate token for default endpoint
+        is_default_endpoint = self.api_url == "https://api.openai.com/v1/chat/completions"
+        if is_default_endpoint and (not self.token or not self.token.startswith("sk-")):
             raise Exception("Invalid OpenAI API key format")
 
         headers = {
-            "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json",
         }
+        if self.token:
+            headers["Authorization"] = f"Bearer {self.token}"
 
         # Check if model has restricted parameters
         is_restricted = self._is_restricted_model()
